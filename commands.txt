@@ -1,0 +1,83 @@
+# Project directory
+sudo -i
+mkdir -p /root/diskdetective
+cd /root/diskdetective
+
+# Filesystem survey
+lsblk
+df -h
+du -xh --max-depth=1 / 2>/dev/null | sort -h
+
+# Find large files
+find / -type f -size +100M -ls 2>/dev/null
+find / -type f -printf '%s %p\n' 2>/dev/null | sort -nr | head -10
+
+# Find stale files
+find / -type f -mtime +180 -ls 2>/dev/null
+find / -type f -mtime +180 -print 2>/dev/null > stale_files.txt
+cat stale_files.txt
+
+# Find files owned by a user
+find / -type f -user root -ls 2>/dev/null
+
+# Create test file
+echo "DiskDetective link test" > original.txt
+
+# Create hard link
+ln original.txt hardlink.txt
+ls -li original.txt hardlink.txt
+
+# Create symbolic link
+ln -s original.txt symlink.txt
+ls -li original.txt hardlink.txt symlink.txt
+
+# Delete original file
+rm original.txt
+
+# Test hard link
+cat hardlink.txt
+
+# Test symbolic link
+cat symlink.txt
+
+# Create storage audit report
+nano storage_audit.txt
+
+# Check new disk
+lsblk
+
+# Create partition
+fdisk /dev/sdb
+
+# Format partition
+mkfs.xfs /dev/sdb1
+
+# Create archive mount point
+mkdir /archive
+
+# Mount archive disk
+mount /dev/sdb1 /archive
+
+# Verify mount
+df -h /archive
+lsblk
+
+# Copy stale files to archive
+cp /path/to/oldfile /archive/
+
+# Verify archived files
+ls -lh /archive
+
+# Get UUID
+blkid /dev/sdb1
+
+# Configure persistent mount
+nano /etc/fstab
+
+# Test fstab
+umount /archive
+mount -a
+
+# Final verification
+df -h /archive
+ls -lh /archive
